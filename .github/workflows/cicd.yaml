@@ -3,52 +3,52 @@ name: CI-CD to Minikube
 on:
   push:
     branches:
-      - master  # Change if your main branch has a different name
+      - master
 
 jobs:
   deploy:
     runs-on: self-hosted
 
     steps:
-      # 1️⃣ Checkout the repo
       - name: Checkout source
         uses: actions/checkout@v4
+        shell: pwsh
 
-      # 2️⃣ Enable debug logs (PowerShell, Windows runner)
       - name: Enable debug logs
-        shell: powershell
+        shell: pwsh
         run: |
           $env:GITHUB_ACTIONS = "true"
           $env:ACTIONS_RUNNER_DEBUG = "true"
           $env:ACTIONS_STEP_DEBUG = "true"
 
-      # 3️⃣ Login to Docker Hub
-      - name: Login to Docker Hub
-        shell: powershell
+      - name: Docker login
+        shell: pwsh
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          Write-Output "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # 4️⃣ Build Docker image with commit SHA tag
       - name: Build Docker image
-        shell: powershell
+        shell: pwsh
         run: |
           docker build -t esakkimuthus/springapp1:${{ github.sha }} .
 
-      # 5️⃣ Push Docker image to Docker Hub
       - name: Push Docker image
-        shell: powershell
+        shell: pwsh
         run: |
           docker push esakkimuthus/springapp1:${{ github.sha }}
 
-      # 6️⃣ Set KUBECONFIG environment variable (Windows)
-      - name: Set KUBECONFIG environment
-        shell: powershell
+      - name: Set KUBECONFIG
+        shell: pwsh
         run: |
-          $env:KUBECONFIG = "$PWD\kubeconfig"
+          $env:KUBECONFIG = "$($PWD.Path)\kubeconfig"
+          Write-Host "KUBECONFIG path: $env:KUBECONFIG"
 
-      # 7️⃣ Deploy to Minikube
+      - name: Check k8s folder
+        shell: pwsh
+        run: |
+          if (!(Test-Path "k8s")) { throw "k8s folder not found" }
+
       - name: Deploy to Minikube
-        shell: powershell
+        shell: pwsh
         run: |
           kubectl apply -f k8s/
           kubectl set image deployment/spring-app spring-app=esakkimuthus/springapp1:${{ github.sha }}
