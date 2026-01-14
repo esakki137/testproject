@@ -14,14 +14,6 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # ✅ Enable debug logs (run step, shell pwsh)
-      - name: Enable debug logs
-        run: |
-          $env:GITHUB_ACTIONS = "true"
-          $env:ACTIONS_RUNNER_DEBUG = "true"
-          $env:ACTIONS_STEP_DEBUG = "true"
-        shell: pwsh
-
       # ✅ Docker login
       - name: Docker login
         run: |
