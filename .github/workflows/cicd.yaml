@@ -10,45 +10,29 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      # ✅ Checkout (no shell here)
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # ✅ Docker login
       - name: Docker login
         run: |
-          Write-Output "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-        shell: pwsh
+          Write-Output "${{ secrets.DOCKER_PASSWORD }}" |
+          docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # ✅ Build Docker image
       - name: Build Docker image
         run: |
           docker build -t esakkimuthus/springapp1:${{ github.sha }} .
-        shell: pwsh
 
-      # ✅ Push Docker image
       - name: Push Docker image
         run: |
           docker push esakkimuthus/springapp1:${{ github.sha }}
-        shell: pwsh
 
-      # ✅ Set KUBECONFIG
-      - name: Set KUBECONFIG
+      - name: Verify kubectl
         run: |
-          $env:KUBECONFIG = "$($PWD.Path)\kubeconfig"
-          Write-Host "KUBECONFIG path: $env:KUBECONFIG"
-        shell: pwsh
+          kubectl version --client
+          kubectl cluster-info
 
-      # ✅ Check k8s folder
-      - name: Check k8s folder
-        run: |
-          if (!(Test-Path "k8s")) { throw "k8s folder not found" }
-        shell: pwsh
-
-      # ✅ Deploy to Minikube
       - name: Deploy to Minikube
         run: |
           kubectl apply -f k8s/
           kubectl set image deployment/spring-app spring-app=esakkimuthus/springapp1:${{ github.sha }}
           kubectl rollout status deployment/spring-app
-        shell: pwsh
