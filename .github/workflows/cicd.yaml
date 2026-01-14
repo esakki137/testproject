@@ -25,9 +25,6 @@ jobs:
       run: |
         docker push esakkimuthus/springapp1:${{ github.sha }}
 
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v4
-
     - name: Configure kubeconfig
       run: |
         echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
